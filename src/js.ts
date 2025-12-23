@@ -106,12 +106,17 @@ chrome.runtime.onMessage.addListener(
         if (request.r == 'showImages') ShowImages();
         if (request.r == 'toggleImages') {
             if (settings) {
-                settings.paused = !settings.paused;
-                chrome.runtime.sendMessage({ r: 'pause', toggle: settings.paused });
-                if (settings.paused)
-                    ShowImages();
-                else
-                    HideImages();
+                // Determine new state based on current local state
+                let newPausedState = !settings.paused;
+                // Just send the new desired state. Service worker will broadcast the update back to us.
+                chrome.runtime.sendMessage({ r: 'pause', toggle: newPausedState });
+            }
+        }
+        if (request.r == 'settingsUpdated') {
+            settings = request.settings;
+            if (settings) {
+                if (settings.paused) ShowImages();
+                else HideImages();
             }
         }
     }

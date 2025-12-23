@@ -136,6 +136,13 @@ chrome.runtime.onMessage.addListener(
                     let { settings } = await chrome.storage.local.get('settings');
                     settings.paused = request.toggle;
                     chrome.storage.local.set({ settings });
+                    // Broadcast chang to all tabs and popup
+                    chrome.runtime.sendMessage({ r: 'settingsUpdated', settings: settings });
+                    chrome.tabs.query({}, (tabs) => {
+                        for (let tab of tabs) {
+                            chrome.tabs.sendMessage(tab.id, { r: 'settingsUpdated', settings: settings }).catch(() => {});
+                        }
+                    });
                     break;
                 }
                 case 'pauseForTab': {

@@ -4,14 +4,23 @@
     <link href="popup.css" rel="stylesheet" />
 </head>
 <body>
-    <div style='width: 150px; color: blue;'>
-        <div class='item'>
+    <div id="close" title="Close Popup">&#x2715;</div>
+    <div class="content">
+        <div class="header-items">
             <a id='options' href="options.htm" target="_blank">Options</a>
-            <div id="close">&#x2715;</div>
         </div>
-        <div class='item'>
-            <button type="button" id='showImages'>Show Images</button>
+        
+        <div class="action-area">
+            <div class="button-group">
+                <div id="pauseTab" class="pin-btn" title="Applies to this tab only">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 12V4H17V2H7V4H8V12L6 14V16H11V22H13V16H18V14L16 12Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <button type="button" id='showImages'>Show Images</button>
+            </div>
         </div>
+
         <div class='item'>
             <input type='checkbox' id='excludeDomain'>
             <label for='excludeDomain'><i-add-exclude></i-add-exclude> Website</label>
@@ -23,22 +32,9 @@
                     for this Tab</label>
             </div>
         </div>
-        <div class='item'>
-            <input type='checkbox' id='pauseChk'>
-            <label for='pauseChk'>Pause</label>
-        </div>
-        <div class='item'>
-            <input type='checkbox' id='pauseTab'>
-            <label for='pauseTab'>Pause<br />
-                for this Tab</label>
-        </div>
-        <!--<a href="https://wizmage.com" id="wizmage-plus" target="_blank">WizmagePlus <img src="new.png" /></a>-->
-        <div class="item">
-            <div><a id="still-seeing-images">Still seeing images?</a></div>
-            <ul id="advice">
-                <li>Email: wizmageextension@gmail.com</li>
-            </ul>
-        </div>
+        
+        <!-- Hidden input to store state for logic, though button is now primary -->
+        <input type="checkbox" id="pauseChk" style="display:none"> 
     </div>
     <script src='popup.js' type='text/javascript'></script>
 </body>
