@@ -16,7 +16,9 @@ chrome.runtime.onInstalled.addListener(
                             noEye: s.isNoEye == '1',
                             blackList: s.isBlackList == '1',
                             closeOnClick: s.closeOnClick == '1',
-                            maxSafe: +s.maxSafe || 32
+                            maxSafe: +s.maxSafe || 32,
+                            excludeVideos: false,
+                            excludeImages: false
                         };
                         chrome.storage.local.set({ urlList, settings });
                         resolve();
@@ -41,7 +43,9 @@ chrome.runtime.onInstalled.addListener(
                         noEye: false,
                         blackList: false,
                         closeOnClick: false,
-                        maxSafe: 32
+                        maxSafe: 32,
+                        excludeVideos: false,
+                        excludeImages: false
                     }
                 });
             }
@@ -186,6 +190,32 @@ chrome.runtime.onMessage.addListener(
                     let { settings } = await chrome.storage.local.get('settings');
                     settings.closeOnClick = request.toggle;
                     chrome.storage.local.set({ settings });
+                    break;
+                }
+                case 'setExcludeVideos': {
+                    let { settings } = await chrome.storage.local.get('settings');
+                    settings.excludeVideos = request.toggle;
+                    chrome.storage.local.set({ settings });
+                    // Broadcast
+                    chrome.runtime.sendMessage({ r: 'settingsUpdated', settings: settings }).catch(() => {});
+                    chrome.tabs.query({}, (tabs) => {
+                         for (let tab of tabs) {
+                             chrome.tabs.sendMessage(tab.id, { r: 'settingsUpdated', settings: settings }).catch(() => {});
+                         }
+                    });
+                    break;
+                }
+                case 'setExcludeImages': {
+                    let { settings } = await chrome.storage.local.get('settings');
+                    settings.excludeImages = request.toggle;
+                    chrome.storage.local.set({ settings });
+                     // Broadcast
+                     chrome.runtime.sendMessage({ r: 'settingsUpdated', settings: settings }).catch(() => {});
+                     chrome.tabs.query({}, (tabs) => {
+                          for (let tab of tabs) {
+                              chrome.tabs.sendMessage(tab.id, { r: 'settingsUpdated', settings: settings }).catch(() => {});
+                          }
+                     });
                     break;
                 }
             }

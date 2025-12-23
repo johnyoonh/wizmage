@@ -4,10 +4,10 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 
     function updateButton(paused) {
         if (paused) {
-            btn.innerText = 'Hide Images'; // If paused (images shown), button should say Hide
+            btn.innerText = 'Hide Media'; // If paused (media shown), button should say Hide
             btn.className = 'hiding';
         } else {
-            btn.innerText = 'Show Images'; // If running (images hidden), button should say Show
+            btn.innerText = 'Show Media'; // If running (media hidden), button should say Show
             btn.className = '';
         }
     }
@@ -42,6 +42,11 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 
         document.getElementById('excludeDomain').checked = settings.excluded;
         document.getElementById('excludeForTab').checked = settings.excludedForTab;
+        
+        // New exclude options
+        document.getElementById('excludeVideos').checked = settings.excludeVideos;
+        document.getElementById('excludeImages').checked = settings.excludeImages;
+
         document.getElementById('exclude-tab-wrap').style.display = 'block';
         document.querySelectorAll('i-add-exclude').forEach(x => x.innerText = settings.blackList ? 'Add' : 'Exclude');
         closeOnClick = settings.closeOnClick;
@@ -89,8 +94,21 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         if (request.r == 'settingsUpdated' && request.settings) {
             document.getElementById('pauseChk').checked = request.settings.paused;
             updateButton(request.settings.paused);
+
+            document.getElementById('excludeVideos').checked = request.settings.excludeVideos;
+            document.getElementById('excludeImages').checked = request.settings.excludeImages;
         }
     });
+    
+    // Handlers for new checkboxes
+    document.getElementById('excludeVideos').onclick = function () {
+         chrome.runtime.sendMessage({ r: 'setExcludeVideos', toggle: this.checked });
+         if (closeOnClick) close();
+    };
+    document.getElementById('excludeImages').onclick = function () {
+         chrome.runtime.sendMessage({ r: 'setExcludeImages', toggle: this.checked });
+         if (closeOnClick) close();
+    };
 
 });
 document.getElementById('close').onclick = function () { close(); };

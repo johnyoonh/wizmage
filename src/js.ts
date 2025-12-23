@@ -11,6 +11,8 @@ interface Settings {
     excluded: boolean,
     excludedForTab: boolean,
     pausedForTab: boolean,
+    excludeVideos: boolean,
+    excludeImages: boolean,
 }
 interface HTMLElement {
     wzmHasWizmageBG?: boolean,
@@ -391,7 +393,16 @@ function DoWin(win: Window, winContentLoaded: boolean) {
         let el = this;
         if (el.getAttribute('_ngcontent-web-shell-c3127009304') != null)
             console.log(el);
+
+        // Exclusions: If setting is true, we want to SHOW it (Do nothing / Unblock if blocked)
+        // Note: DoElement is called repeatedly. If we switch setting, we need to handle unblocking.
+        
         if (isImg(el)) {
+            if (_settings.excludeImages) {
+                 if (el.wzmWizmaged) ShowEl.call(el); 
+                 return;
+            }
+
             //attach load event - needed 1) as we need to catch it after it is switched for the blankImg, 2) in case the img gets changed to something else later
             DoLoadEventListener(el, true);
 
@@ -430,6 +441,10 @@ function DoWin(win: Window, winContentLoaded: boolean) {
             }
         }
         else if (el.tagName == 'VIDEO') {
+            if (_settings.excludeVideos) {
+                if (el.wzmWizmaged) ShowEl.call(el);
+                return;
+            }
             DoHidden(el, true);
             MarkWizmaged(el, true);
         } else if (el.tagName == 'PICTURE') {
@@ -441,8 +456,12 @@ function DoWin(win: Window, winContentLoaded: boolean) {
             MarkWizmaged(el, true);
         } else {
             let compStyle = getComputedStyle(el), bgimg = compStyle.backgroundImage, width = parseInt(compStyle.width!) || el.clientWidth, height = parseInt(compStyle.height!) || el.clientHeight; //as per https://developer.mozilla.org/en/docs/Web/API/window.getComputedStyle, getComputedStyle will return the 'used values' for width and height, which is always in px. We also use clientXXX, since sometimes compStyle returns NaN.
-            if (bgimg && bgimg != 'none'
-                && !el.wzmWizmaged
+            if (bgimg && bgimg != 'none') {
+                if (_settings.excludeImages) {
+                    if (el.wzmWizmaged) ShowEl.call(el);
+                    return;
+                }
+                if (!el.wzmWizmaged
                 && (width == 0 || width > _settings.maxSafe) && (height == 0 || height > _settings.maxSafe) /*we need to catch 0 too, as sometimes elements start off as zero*/
                 && bgimg.indexOf('url(') != -1
                 && !bgimg.startsWith(urlExtensionUrl)
@@ -458,6 +477,7 @@ function DoWin(win: Window, winContentLoaded: boolean) {
                     if (urlMatch)
                         i.src = urlMatch[1];
                 }
+            }
             }
             if (el.shadowRoot && !(<any>el.shadowRoot).wzmShadowSetup) {
                 setupBody(el.shadowRoot);
