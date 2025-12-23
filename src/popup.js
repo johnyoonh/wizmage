@@ -46,14 +46,19 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         document.querySelectorAll('i-add-exclude').forEach(x => x.innerText = settings.blackList ? 'Add' : 'Exclude');
         closeOnClick = settings.closeOnClick;
     });
-    // Button onclick logic (replaces pauseChk.onclick)
+    // Button onclick logic
     document.getElementById('showImages').onclick = function () {
-        // Toggle based on current state derived from button text or hidden checkbox
-        // If pauseChk is checked, it means we are PAUSED (images SHOWN). So we want to HIDE.
-        if (document.getElementById('pauseChk').checked)
-            hideImages();
-        else
-            showImages(); // Will Pause (Show)
+        // Current state: if pauseChk is checked, it means we are PAUSED (Images Shown).
+        // So clicking means we want to UNPAUSE (Hide Images).
+        var isCurrentlyPaused = document.getElementById('pauseChk').checked;
+        var newPausedState = !isCurrentlyPaused;
+        
+        // Send command to Service Worker to persist and broadcast
+        chrome.runtime.sendMessage({ r: 'pause', toggle: newPausedState });
+        
+        // Optimistic update (will be confirmed by listener)
+        // document.getElementById('pauseChk').checked = newPausedState;
+        // updateButton(newPausedState);
 
         if (closeOnClick) close();
     };
