@@ -186,6 +186,16 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
+chrome.commands.onCommand.addListener((command) => {
+    if (command === 'toggle_images') {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length > 0) {
+                chrome.tabs.sendMessage(tabs[0].id, { r: 'toggleImages' });
+            }
+        });
+    }
+});
+
 function getDomain(url) {
     let regex = /^\w+:\/\/([\w\.:-]+)/.exec(url);
     return regex ? regex[1].toLowerCase() : null;

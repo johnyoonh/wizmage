@@ -1,5 +1,6 @@
 interface Window {
     wzmShowImages(): void;
+    wzmHideImages(): void;
 }
 interface Settings {
     paused: boolean,
@@ -103,6 +104,16 @@ chrome.runtime.sendMessage({ r: 'getSettings' }, function (s: Settings) {
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         if (request.r == 'showImages') ShowImages();
+        if (request.r == 'toggleImages') {
+            if (settings) {
+                settings.paused = !settings.paused;
+                chrome.runtime.sendMessage({ r: 'pause', toggle: settings.paused });
+                if (settings.paused)
+                    ShowImages();
+                else
+                    HideImages();
+            }
+        }
     }
 );
 
@@ -124,6 +135,22 @@ function ShowImages() {
     }
 }
 
+function HideImages() {
+    if (!showAll) return;
+    showAll = false;
+    if (window == top)
+        chrome.runtime.sendMessage({ r: 'setColorIcon', toggle: true });
+    if (window.wzmHideImages) window.wzmHideImages();
+    for (let i = 0, max = iframes.length; i < max; i++) {
+        let iframe = iframes[i];
+        try {
+            if (iframe.contentWindow && iframe.contentWindow.wzmHideImages)
+                iframe.contentWindow.wzmHideImages();
+        }
+        catch (err) { }
+    }
+}
+
 function DoWin(win: Window, winContentLoaded: boolean) {
     let _settings = settings!, //DoWin is only called after settings is set
         doc = win.document,
@@ -138,7 +165,7 @@ function DoWin(win: Window, winContentLoaded: boolean) {
     //global show images
     win.wzmShowImages = function () {
         if (hasStarted) {
-            doc.removeEventListener('keydown', DocKeyDown);
+            //doc.removeEventListener('keydown', DocKeyDown);
             doc.removeEventListener('mousemove', DocMouseMove);
             win.removeEventListener('scroll', WindowScroll);
             for (let i = 0, max = elList.length; i < max; i++)
@@ -151,12 +178,21 @@ function DoWin(win: Window, winContentLoaded: boolean) {
             for (let i = 0, bodyChildren = doc.body.children; i < bodyChildren.length; i++) //for some reason, sometimes the eye is removed before
                 if (bodyChildren[i] == eye)
                     doc.body.removeChild(eye);
-            for (let obs of observers)
-                obs.disconnect();
+            // for (let obs of observers)
+            //     obs.disconnect();
             RemoveClass(document.documentElement!, 'wizmage-running');
         }
         else
             AddClass(document.documentElement!, 'wizmage-show-html');
+    }
+    
+    win.wzmHideImages = function () {
+        if (hasStarted) {
+            doc.addEventListener('mousemove', DocMouseMove);
+            win.addEventListener('scroll', WindowScroll);
+            DoElements(doc.body, true);
+            AddClass(document.documentElement!, 'wizmage-running');
+        }
     }
 
     //start, or register start
@@ -166,12 +202,7 @@ function DoWin(win: Window, winContentLoaded: boolean) {
         win.addEventListener('DOMContentLoaded', Start);
 
     function DocKeyDown(e: KeyboardEvent) {
-        if (e.altKey && e.keyCode == 80 && !_settings.paused) { //ALT-p
-            _settings.paused = true;
-            chrome.runtime.sendMessage({ r: 'pause', toggle: true });
-            ShowImages();
-        }
-        else if (mouseOverEl && e.altKey) {
+        if (mouseOverEl && e.altKey) {
             if (e.keyCode == 65 && mouseOverEl.wzmWizmaged) { //ALT-a
                 ShowEl.call(mouseOverEl);
                 eye.style.display = 'none';

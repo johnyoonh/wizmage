@@ -18,6 +18,15 @@
     "service_worker": "service_worker.js"
   },
   "options_page": "options.htm",
+  "commands": {
+    "toggle_images": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+H",
+        "mac": "Ctrl+Shift+H"
+      },
+      "description": "Toggle Images"
+    }
+  },
   "content_scripts": [
     {
       "matches": [ "<all_urls>" ],
